@@ -14,4 +14,8 @@
 
 package(default_visibility = ["//visibility:public"])
 
-exports_files(["requirements.txt"])
+exports_files([
+    "requirements-bazel-core.txt",
+    "requirements-dev.txt",
+    "requirements-release.txt",
+])
