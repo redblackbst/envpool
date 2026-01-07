@@ -15,6 +15,10 @@
 #include "envpool/core/py_envpool.h"
 #include "envpool/procgen/procgen_env.h"
 
+#ifdef slots
+#undef slots  // Qt defines 'slots' macro; pybind11 uses a variable named slots.
+#endif
+
 using ProcgenEnvSpec = PyEnvSpec<procgen::ProcgenEnvSpec>;
 using ProcgenEnvPool = PyEnvPool<procgen::ProcgenEnvPool>;
 
