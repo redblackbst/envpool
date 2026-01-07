@@ -76,8 +76,17 @@ bazel_dep(name = "bazel_skylib", version = "1.9.0")
 # rules_foreign_cc dependency with toolchain registration
 bazel_dep(name = "rules_foreign_cc", version = "0.15.1")
 
-# Register all the toolchains for rules_foreign_cc
-register_toolchains("@rules_foreign_cc//toolchains:all")
+# Prefer the prebuilt cmake/ninja toolchains and the locally installed GNU
+# autotools/pkg-config instead of building them from source.
+register_toolchains(
+    "@rules_foreign_cc//toolchains:preinstalled_cmake_toolchain",
+    "@rules_foreign_cc//toolchains:built_ninja_toolchain",
+    "@rules_foreign_cc//toolchains:preinstalled_make_toolchain",
+    "@rules_foreign_cc//toolchains:preinstalled_pkgconfig_toolchain",
+    "@rules_foreign_cc//toolchains:preinstalled_autoconf_toolchain",
+    "@rules_foreign_cc//toolchains:preinstalled_automake_toolchain",
+    "@rules_foreign_cc//toolchains:preinstalled_m4_toolchain",
+)
 
 bazel_dep(name = "glog", version = "0.7.1")
 bazel_dep(name = "rules_boost", repo_name = "com_github_nelhage_rules_boost")
