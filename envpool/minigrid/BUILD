@@ -66,7 +66,7 @@ py_test(
         ":minigrid",
         ":minigrid_registration",
         requirement("absl-py"),
-        requirement("gym"),
+        requirement("gymnasium"),
         requirement("numpy"),
         requirement("minigrid"),
     ],
@@ -80,7 +80,7 @@ py_test(
         ":minigrid",
         ":minigrid_registration",
         requirement("absl-py"),
-        requirement("gym"),
+        requirement("gymnasium"),
         requirement("numpy"),
     ],
 )

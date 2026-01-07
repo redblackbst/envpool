@@ -17,7 +17,7 @@ import logging
 from typing import Iterable, Iterator, List, Mapping, Optional, Union
 
 import dm_env
-import gym
+import gymnasium as gym
 import jax
 import jax.numpy as jnp
 import numpy as np

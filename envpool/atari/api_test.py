@@ -16,7 +16,7 @@
 from typing import no_type_check
 
 import dm_env
-import gym
+import gymnasium as gym
 import numpy as np
 from absl import logging
 from absl.testing import absltest

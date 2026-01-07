@@ -15,7 +15,7 @@
 import argparse
 import time
 
-import gym
+import gymnasium as gym
 import tqdm
 from atari_wrappers import wrap_deepmind
 

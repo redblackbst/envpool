@@ -15,7 +15,7 @@
 
 from typing import Any, no_type_check
 
-import gym
+import gymnasium as gym
 import mujoco
 import numpy as np
 from absl import logging

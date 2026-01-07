@@ -15,7 +15,7 @@
 import argparse
 from typing import Any, Dict, Tuple, Type
 
-import gym
+import gymnasium as gym
 import numpy as np
 import torch
 import torch.nn.functional as F

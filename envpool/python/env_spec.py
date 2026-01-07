@@ -19,8 +19,7 @@ from collections import namedtuple
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Type, Union
 
 import dm_env
-import gym
-import gymnasium
+import gymnasium as gym
 
 from .data import (
   dm_spec_transform,
@@ -169,7 +168,7 @@ class EnvSpecMixin(ABC):
   @property
   def gymnasium_observation_space(
     self: EnvSpec
-  ) -> Union[gymnasium.Space, Dict[str, Any]]:
+  ) -> Union[gym.Space, Dict[str, Any]]:
     """Convert internal state_spec to gymnasium.Env compatible format.
 
     Returns:
@@ -189,12 +188,12 @@ class EnvSpecMixin(ABC):
     }
     if len(spec) == 1:
       return list(spec.values())[0]
-    return to_nested_dict(spec, gymnasium.spaces.Dict)
+    return to_nested_dict(spec, gym.spaces.Dict)
 
   @property
   def gymnasium_action_space(
     self: EnvSpec
-  ) -> Union[gymnasium.Space, Dict[str, Any]]:
+  ) -> Union[gym.Space, Dict[str, Any]]:
     """Convert internal action_spec to gymnasium.Env compatible format.
 
     Returns:
@@ -219,7 +218,7 @@ class EnvSpecMixin(ABC):
       k: gymnasium_spec_transform(k.split(".")[-1], v, "act")
       for k, v in spec.items()
     }
-    return to_nested_dict(spec, gymnasium.spaces.Dict)
+    return to_nested_dict(spec, gym.spaces.Dict)
 
   def __repr__(self: EnvSpec) -> str:
     """Prettify debug info."""

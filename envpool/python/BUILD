@@ -21,7 +21,7 @@ py_library(
     srcs = ["protocol.py"],
     deps = [
         requirement("dm-env"),
-        requirement("gym"),
+        requirement("gymnasium"),
         requirement("numpy"),
     ],
 )
@@ -40,7 +40,6 @@ py_library(
     deps = [
         requirement("optree"),
         requirement("dm-env"),
-        requirement("gym"),
         requirement("gymnasium"),
         requirement("numpy"),
         ":protocol",
@@ -52,7 +51,6 @@ py_library(
     srcs = ["env_spec.py"],
     deps = [
         requirement("dm-env"),
-        requirement("gym"),
         requirement("gymnasium"),
         ":data",
         ":protocol",
@@ -113,7 +111,6 @@ py_library(
     deps = [
         requirement("optree"),
         requirement("dm-env"),
-        requirement("gym"),
         requirement("numpy"),
         ":data",
         ":envpool",

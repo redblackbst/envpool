@@ -17,8 +17,7 @@ from collections import namedtuple
 from typing import Any, Dict, List, Tuple, Type
 
 import dm_env
-import gym
-import gymnasium
+import gymnasium as gym
 import numpy as np
 import optree
 from optree import PyTreeSpec
@@ -89,15 +88,12 @@ def dm_spec_transform(
 
 
 def gym_spec_transform(name: str, spec: ArraySpec, spec_type: str) -> gym.Space:
-  """Transform ArraySpec to gym.Env compatible spaces."""
+  """Transform ArraySpec to gym.Env compatible spaces (backed by Gymnasium)."""
   if np.prod(np.abs(spec.shape)) == 1 and \
       np.isclose(spec.minimum, 0) and spec.maximum < ACTION_THRESHOLD:
     # special treatment for discrete action space
     discrete_range = int(spec.maximum - spec.minimum + 1)
-    try:
-      return gym.spaces.Discrete(n=discrete_range, start=int(spec.minimum))
-    except TypeError:  # old gym version doesn't have `start`
-      return gym.spaces.Discrete(n=discrete_range)
+    return gym.spaces.Discrete(n=discrete_range, start=int(spec.minimum))
   return gym.spaces.Box(
     shape=[s for s in spec.shape if s != -1],
     dtype=spec.dtype,
@@ -108,19 +104,9 @@ def gym_spec_transform(name: str, spec: ArraySpec, spec_type: str) -> gym.Space:
 
 def gymnasium_spec_transform(
   name: str, spec: ArraySpec, spec_type: str
-) -> gymnasium.Space:
+) -> gym.Space:
   """Transform ArraySpec to gymnasium.Env compatible spaces."""
-  if np.prod(np.abs(spec.shape)) == 1 and \
-      np.isclose(spec.minimum, 0) and spec.maximum < ACTION_THRESHOLD:
-    # special treatment for discrete action space
-    discrete_range = int(spec.maximum - spec.minimum + 1)
-    return gymnasium.spaces.Discrete(n=discrete_range, start=int(spec.minimum))
-  return gymnasium.spaces.Box(
-    shape=[s for s in spec.shape if s != -1],
-    dtype=spec.dtype,
-    low=spec.minimum,
-    high=spec.maximum,
-  )
+  return gym_spec_transform(name, spec, spec_type)
 
 
 def dm_structure(

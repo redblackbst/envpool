@@ -16,7 +16,7 @@
 See https://envpool.readthedocs.io/en/latest/content/xla_interface.html
 """
 
-import gym
+import gymnasium as gym
 import jax.numpy as jnp
 from jax import jit, lax
 from packaging import version

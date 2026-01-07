@@ -193,7 +193,7 @@ available to see on the python side:
 
     ::
 
-        >>> import gym
+        >>> import gymnasium as gym
         >>> env = gym.make("FetchReach-v1")
         >>> e.observation_space
         Dict(achieved_goal:Box([-inf ...], [inf ...], (3,), float32), desired_goal:Box([-inf ...], [inf ...], (3,), float32), observation:Box([-inf ...], [inf ...], (10,), float32))
