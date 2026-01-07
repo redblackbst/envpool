@@ -105,37 +105,23 @@ use_repo(
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-# NOTE: The best way to configure Qt with Bazel MODULE.bazel would be:
-# 1. Use qt_configure to create a local_config_qt repository
-# 2. Use local_qt_path to get the path to the Qt installation
-# 3. Create a new_local_repository called "qt" with the build file from com_justbuchanan_rules_qt
-# 4. Register the Qt toolchains
-#
-# However, this approach has issues with the current Bazel module system.
-# For a WORKSPACE-based project, the configuration would look like:
-#
-# load("@com_justbuchanan_rules_qt//:qt_configure.bzl", "qt_configure")
-# qt_configure()
-# load("@local_config_qt//:local_qt.bzl", "local_qt_path")
-# new_local_repository(
-#     name = "qt",
-#     build_file = "@com_justbuchanan_rules_qt//:qt.BUILD",
-#     path = local_qt_path(),
-# )
-# load("@com_justbuchanan_rules_qt//tools:qt_toolchain.bzl", "register_qt_toolchains")
-# register_qt_toolchains()
+# rules_cc is required for rules_qt's repo_mapping/cc toolchains.
+bazel_dep(name = "rules_cc", version = "0.2.16")
 
-# Commenting out Qt configuration to move on without it
-# qt_configure = use_repo_rule("@com_justbuchanan_rules_qt//:qt_configure.bzl", "qt_configure")
-# qt_configure(name = "local_config_qt")
-#
-# local_qt_path = use_repo_rule("@local_config_qt//:local_qt.bzl", "local_qt_path")
-# new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:new_local_repository.bzl", "new_local_repository")
-# new_local_repository(
-#     name = "qt",
-#     build_file = "@com_justbuchanan_rules_qt//:qt.BUILD",
-#     path = local_qt_path(),
-# )
+# Qt configuration via rules_qt
+qt_autoconf = use_repo_rule("@com_justbuchanan_rules_qt//:qt_configure.bzl", "qt_autoconf")
+qt_autoconf(name = "local_config_qt")
+
+# Update the path if your Qt prefix differs; The repo only needs to expose include/bin paths for moc/uic/rcc.
+new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
+new_local_repository(
+    name = "qt",
+    build_file = "@com_justbuchanan_rules_qt//:qt.BUILD",
+    path = "/usr/include/qt",
+)
+
+# register only the Linux toolchain.
+register_toolchains("@com_justbuchanan_rules_qt//tools:qt_linux_toolchain")
 
 ##############################################
 # 2) Declare each http_archive exactly once.
