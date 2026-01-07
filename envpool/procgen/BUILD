@@ -17,18 +17,11 @@ load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 
 package(default_visibility = ["//visibility:public"])
 
-genrule(
-    name = "gen_procgen_assets",
-    srcs = ["@procgen//:procgen_assets"],
-    outs = ["assets"],
-    cmd = "mkdir -p $(OUTS) && cp -r $(SRCS) $(OUTS)",
-)
-
 cc_library(
     name = "procgen_env",
     hdrs = ["procgen_env.h"],
     data = [
-        ":gen_procgen_assets",
+        "@procgen//:procgen_assets",
     ],
     deps = [
         "//envpool/core:async_envpool",
