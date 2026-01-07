@@ -139,6 +139,7 @@ cython_debug/
 
 # Customized
 bazel-*
+*.lock
 pyflakes*
 .DS_Store
 .idea/
