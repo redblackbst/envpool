@@ -5,19 +5,22 @@ module(
     repo_name = "envpool",
 )
 
-# Pull in rules_python with Bzlmod
+# Core Bazel registry deps
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "rules_python", version = "1.7.0")
+bazel_dep(name = "rules_foreign_cc", version = "0.15.1")
+bazel_dep(name = "rules_qt", version = "0.0.5")
+bazel_dep(name = "rules_boost", repo_name = "com_github_nelhage_rules_boost")
 
-#
-# 1) Declare and configure the Python toolchain.
-#
+# Declare and configure the Python toolchain
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.defaults(
     python_version = "3.12",
     python_version_env = "BAZEL_PYTHON_VERSION",
 )
 
-# Declare the versions you intend to build wheels for.
+# Declare the versions for which to build wheels
 python.toolchain(python_version = "3.12")
 python.toolchain(python_version = "3.13")
 python.toolchain(python_version = "3.14")
@@ -28,53 +31,32 @@ cuda_configure = use_repo_rule("//third_party/cuda:cuda.bzl", "cuda_configure")
 
 cuda_configure(name = "cuda")
 
-#
-# 2) Parse and install your pip packages. This uses the new pip extension
-#    to directly list dependencies in the MODULE.bazel file.
-#
+# Parse and install your pip packages
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
-
-pip_reqs = {
-    "//third_party/pip_requirements:requirements-bazel-core.txt": "linux_x86_64",
-}
-
 pip.parse(
     hub_name = "pip_requirements",
     python_version = "3.12",
-    requirements_by_platform = pip_reqs,
+    requirements_by_platform = {
+        "//third_party/pip_requirements:requirements-stoix.txt": "linux_x86_64",
+    },
 )
 pip.parse(
     hub_name = "pip_requirements",
     python_version = "3.13",
-    requirements_by_platform = pip_reqs,
+    requirements_by_platform = {
+        "//third_party/pip_requirements:requirements-stoix.txt": "linux_x86_64",
+    },
 )
 pip.parse(
     hub_name = "pip_requirements",
     python_version = "3.14",
     requirements_by_platform = {
-        "//third_party/pip_requirements:requirements-bazel-core.txt": "linux_x86_64,linux_x86_64_freethreaded",
+        "//third_party/pip_requirements:requirements-stoix.txt": "linux_x86_64,linux_x86_64_freethreaded",
     },
 )
 
 # Actually create the repos for these pip dependencies
 use_repo(pip, "pip_requirements")
-
-# Other dependencies
-bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "pybind11_bazel", version = "3.0.0+redblackbst.0")
-
-# Use custom pybind11_bazel
-git_override(
-    module_name = "pybind11_bazel",
-    branch = "pybind11-fork",
-    remote = "https://github.com/redblackbst/pybind11_bazel.git",
-)
-
-# Add bazel_skylib dependency
-bazel_dep(name = "bazel_skylib", version = "1.9.0")
-
-# rules_foreign_cc dependency with toolchain registration
-bazel_dep(name = "rules_foreign_cc", version = "0.15.1")
 
 # Prefer the prebuilt cmake/ninja toolchains and the locally installed GNU
 # autotools/pkg-config instead of building them from source.
@@ -88,8 +70,37 @@ register_toolchains(
     "@rules_foreign_cc//toolchains:preinstalled_m4_toolchain",
 )
 
-bazel_dep(name = "glog", version = "0.7.1")
-bazel_dep(name = "rules_boost", repo_name = "com_github_nelhage_rules_boost")
+# Qt setup (fetched Qt6 with unsuffixed alias repo @qt)
+qt_ext = use_extension("@rules_qt//extension:qt.bzl", "fetch")
+qt_ext.install(
+    name = "qt6",
+    build_file = "@rules_qt//extension:qt/6.8.3/linux_x86_64.BUILD",
+    os = "linux",
+    version = "6.8.3",
+)
+use_repo(qt_ext, "qt6")
+
+# Provide @qt alias repo pointing at qt6 targets.
+new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
+new_local_repository(
+    name = "qt",
+    path = ".",
+    build_file_content = """
+alias(name = "qt_core", actual = "@qt6//:qt_core_linux", visibility = ["//visibility:public"])
+alias(name = "qt_gui", actual = "@qt6//:qt_gui_linux", visibility = ["//visibility:public"])
+""",
+)
+register_toolchains("@rules_qt//tools:all")
+
+# Use custom pybind11_bazel
+bazel_dep(name = "pybind11_bazel", version = "3.0.0+redblackbst.0")
+git_override(
+    module_name = "pybind11_bazel",
+    commit = "f5a8361ff025538572878b0a932799ac274546b4",
+    remote = "https://github.com/redblackbst/pybind11_bazel.git",
+)
+
+# rules_boost overrides and non-module repos
 archive_override(
     module_name = "rules_boost",
     integrity = "sha256-LTilyiMMjpYyAi1PW+8RycyAEHy9clo7915R0Bchb2E=",
@@ -105,83 +116,22 @@ use_repo(
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-# rules_cc is required for rules_qt's repo_mapping/cc toolchains.
-bazel_dep(name = "rules_cc", version = "0.2.16")
-
-# Qt configuration via rules_qt
-qt_autoconf = use_repo_rule("@com_justbuchanan_rules_qt//:qt_configure.bzl", "qt_autoconf")
-qt_autoconf(name = "local_config_qt")
-
-# Update the path if your Qt prefix differs; The repo only needs to expose include/bin paths for moc/uic/rcc.
-new_local_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
-new_local_repository(
-    name = "qt",
-    build_file = "@com_justbuchanan_rules_qt//:qt.BUILD",
-    path = "/usr/include/qt",
-)
-
-# register only the Linux toolchain.
-register_toolchains("@com_justbuchanan_rules_qt//tools:qt_linux_toolchain")
-
-##############################################
-# 2) Declare each http_archive exactly once.
-#    The "name" attribute is your final repo name.
-##############################################
-
 # com_google_absl
-http_archive(
-    name = "com_google_absl",
-    sha256 = "497ebdc3a4885d9209b9bd416e8c3f71e7a1fb8af249f6c2a80b7cbeefcd7e21",
-    strip_prefix = "abseil-cpp-20230802.1",
-    urls = [
-        "https://github.com/abseil/abseil-cpp/archive/refs/tags/20230802.1.zip",
-        "https://ml.cs.tsinghua.edu.cn/~jiayi/envpool/abseil/abseil-cpp/20230802.1.zip",
-    ],
-)
+bazel_dep(name = "abseil-cpp", version = "20260107.0")
 
 # com_github_gflags_gflags
-http_archive(
-    name = "com_github_gflags_gflags",
-    sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
-    strip_prefix = "gflags-2.2.2",
-    urls = [
-        "https://github.com/gflags/gflags/archive/v2.2.2.tar.gz",
-        "https://ml.cs.tsinghua.edu.cn/~jiayi/envpool/gflags/gflags/v2.2.2.tar.gz",
-    ],
+bazel_dep(name = "gflags")
+git_override(
+    module_name = "gflags",
+    commit = "5319350323577cff4c42ab59118531d04f13edf4",
+    remote = "https://github.com/gflags/gflags.git",
 )
 
 # com_github_google_glog
-http_archive(
-    name = "com_github_google_glog",
-    sha256 = "122fb6b712808ef43fbf80f75c52a21c9760683dae470154f02bddfc61135022",
-    strip_prefix = "glog-0.7.1",
-    urls = [
-        "https://github.com/google/glog/archive/v0.7.1.zip",
-        "https://ml.cs.tsinghua.edu.cn/~jiayi/envpool/google/glog/v0.7.1.zip",
-    ],
-)
+bazel_dep(name = "glog", version = "0.7.1")
 
 # com_google_googletest
-http_archive(
-    name = "com_google_googletest",
-    sha256 = "8ad598c73ad796e0d8280b082cebd82a630d73e73cd3c70057938a6501bba5d7",
-    strip_prefix = "googletest-1.17.0",
-    urls = [
-        "https://github.com/google/googletest/archive/refs/tags/v1.17.0.tar.gz",
-        "https://ml.cs.tsinghua.edu.cn/~jiayi/envpool/google/googletest/v1.17.0.tar.gz",
-    ],
-)
-
-# com_justbuchanan_rules_qt
-http_archive(
-    name = "com_justbuchanan_rules_qt",
-    sha256 = "6b42a58f062b3eea10ada5340cd8f63b47feb986d16794b0f8e0fde750838348",
-    strip_prefix = "bazel_rules_qt-3196fcf2e6ee81cf3a2e2b272af3d4259b84fcf9",
-    urls = [
-        "https://github.com/justbuchanan/bazel_rules_qt/archive/3196fcf2e6ee81cf3a2e2b272af3d4259b84fcf9.tar.gz",
-        "https://ml.cs.tsinghua.edu.cn/~jiayi/envpool/justbuchanan/bazel_rules_qt/3196fcf2e6ee81cf3a2e2b272af3d4259b84fcf9.tar.gz",
-    ],
-)
+bazel_dep(name = "googletest", version = "1.17.0.bcr.2")
 
 # glibc_version_header
 http_archive(
