@@ -1,0 +1,17 @@
+# Dependencies used by the stoix modules.
+absl-py
+chex
+distrax
+flax
+flashbax
+gymnasium
+hydra-core
+jax[cuda]
+mctx
+numpy
+optax
+optree
+orbax-checkpoint
+rlax
+tensorflow-probability
+wandb

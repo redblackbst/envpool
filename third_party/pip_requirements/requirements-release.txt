@@ -1,9 +1,0 @@
-setuptools
-wheel
-numpy
-dm-env
-gymnasium>=1.0
-
-optree>=0.14.0
-jax[cpu]
-packaging
