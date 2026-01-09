@@ -149,3 +149,4 @@ log
 _vizdoom*
 MUJOCO_LOG.TXT
 .vscode/
+/stoix
